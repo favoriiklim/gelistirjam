@@ -1,0 +1,4 @@
+repository "GelistirJam/GelistirJam@18966604795554@cloud"
+  path "/"
+    br "/main"
+    co "/main"
