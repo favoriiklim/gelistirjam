@@ -21,7 +21,13 @@ public class SpottingIndicator : MonoBehaviour
 
     [SerializeField] private float pulseSpeed = 6f;
 
+    [Header("Hata ayıklama")]
+    [Tooltip("Sayısal gösterge. Denge ayarı bitince kapatılır. " +
+             "Ölçemediğin şeyi ayarlayamazsın; jam'de bu göstergeyi geç eklemek pahalıya patlar.")]
+    [SerializeField] private bool showDebugReadout = true;
+
     private Image overlay;
+    private GUIStyle debugStyle;
 
     private void Awake()
     {
@@ -59,5 +65,37 @@ public class SpottingIndicator : MonoBehaviour
         }
 
         overlay.color = new Color(alertColor.r, alertColor.g, alertColor.b, alpha);
+    }
+
+    /// <summary>
+    /// Geçici sayısal gösterge. OnGUI kasıtlı tercih: font asset'i ve Canvas
+    /// kurulumu gerektirmez, iş bitince tek satırla silinir.
+    /// </summary>
+    private void OnGUI()
+    {
+        if (!showDebugReadout)
+            return;
+
+        if (debugStyle == null)
+        {
+            debugStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 16,
+                normal = { textColor = Color.yellow }
+            };
+        }
+
+        float speed = PlayerTarget.Instance != null ? PlayerTarget.Instance.NormalizedSpeed : 0f;
+
+        var rect = new Rect(12f, 12f, 420f, 22f);
+        GUI.Label(rect, $"Hız: {speed:F2}   Şüphe: {EnemySpotter.HighestSuspicion():F2}", debugStyle);
+
+        var spotters = EnemySpotter.Active;
+        for (int i = 0; i < spotters.Count; i++)
+        {
+            rect.y += 20f;
+            string sight = spotters[i].HasLineOfSight ? "GÖRÜYOR" : "kayıp";
+            GUI.Label(rect, $"  {spotters[i].name}: {spotters[i].Suspicion:F2}  [{sight}]", debugStyle);
+        }
     }
 }

@@ -33,9 +33,15 @@ public class EnemySpotter : MonoBehaviour
              "Dolmadan yavaş olmalı: kaçmak, görünmekten daha uzun sürsün.")]
     [SerializeField] private float suspicionDecay = 0.25f;
 
-    [Tooltip("Hızın etkisi. 0 = hız hiç önemli değil, 1 = dururken neredeyse görünmezsin.")]
+    [Tooltip("Hızın dolma oranına etkisi. 0 = hız hiç önemli değil.")]
     [Range(0f, 1f)]
     [SerializeField] private float speedInfluence = 0.7f;
+
+    [Tooltip("Tank tamamen dururken görüş menzili bu oranla çarpılır. " +
+             "Asıl hissedilen mekanik budur: durunca düşman seni menzil dışında bırakıp kaybeder. " +
+             "Sadece dolma oranını yavaşlatmak oyuncu tarafından fark edilmez.")]
+    [Range(0.1f, 1f)]
+    [SerializeField] private float stillRangeFactor = 0.45f;
 
     /// <summary>0-1 arası şüphe seviyesi. 1 olduğunda oyuncu fark edilmiştir.</summary>
     public float Suspicion { get; private set; }
@@ -47,6 +53,9 @@ public class EnemySpotter : MonoBehaviour
     public static event System.Action<EnemySpotter> PlayerSpotted;
 
     private static readonly List<EnemySpotter> active = new List<EnemySpotter>();
+
+    /// <summary>Sahnedeki tüm aktif gözcüler. Hata ayıklama göstergesi okur.</summary>
+    public static IReadOnlyList<EnemySpotter> Active => active;
 
     private bool hasReported;
 
@@ -74,12 +83,16 @@ public class EnemySpotter : MonoBehaviour
         if (player == null)
             return;
 
-        HasLineOfSight = CanSee(player.Position, out float distance);
+        // Hareket hâlindeki tank daha uzaktan seçilir. Durunca menzil kısalır
+        // ve düşman oyuncuyu fiilen kaybeder; oyuncunun hissettiği mekanik budur.
+        float effectiveDistance = viewDistance * Mathf.Lerp(stillRangeFactor, 1f, player.NormalizedSpeed);
+
+        HasLineOfSight = CanSee(player.Position, effectiveDistance, out float distance);
 
         if (HasLineOfSight)
         {
             // Yakınlık çarpanı: menzilin ucunda 0, dibinde 1.
-            float proximity = 1f - Mathf.Clamp01(distance / viewDistance);
+            float proximity = 1f - Mathf.Clamp01(distance / effectiveDistance);
 
             // Hız çarpanı: dururken speedInfluence kadar azalır, tam hızda 1 olur.
             float speedFactor = Mathf.Lerp(1f - speedInfluence, 1f, player.NormalizedSpeed);
@@ -103,12 +116,12 @@ public class EnemySpotter : MonoBehaviour
     /// Ucuzdan pahalıya üç kontrol: mesafe, açı, engel.
     /// Raycast en pahalısı olduğu için en sona bırakılır.
     /// </summary>
-    private bool CanSee(Vector3 targetPosition, out float distance)
+    private bool CanSee(Vector3 targetPosition, float maxDistance, out float distance)
     {
         Vector3 toTarget = targetPosition - EyePosition;
         distance = toTarget.magnitude;
 
-        if (distance > viewDistance)
+        if (distance > maxDistance)
             return false;
 
         if (Vector3.Angle(EyeForward, toTarget) > viewAngle * 0.5f)
@@ -135,8 +148,12 @@ public class EnemySpotter : MonoBehaviour
         Gizmos.DrawLine(origin, origin + forward * viewDistance);
 
 #if UNITY_EDITOR
-        UnityEditor.Handles.color = new Color(1f, 0.9f, 0.3f, 0.12f);
+        // Dış koni: tam hızdaki menzil. İç koni: dururkenki menzil.
+        UnityEditor.Handles.color = new Color(1f, 0.9f, 0.3f, 0.10f);
         UnityEditor.Handles.DrawSolidArc(origin, Vector3.up, leftEdge, viewAngle, viewDistance);
+
+        UnityEditor.Handles.color = new Color(0.3f, 0.8f, 1f, 0.14f);
+        UnityEditor.Handles.DrawSolidArc(origin, Vector3.up, leftEdge, viewAngle, viewDistance * stillRangeFactor);
 #endif
     }
 }
