@@ -60,6 +60,11 @@ public class InputRouter : MonoBehaviour
         float drive = Axis(keyboard.wKey.isPressed, keyboard.sKey.isPressed);
         float turn = Axis(keyboard.dKey.isPressed, keyboard.aKey.isPressed);
 
+        // Geri giderken direksiyon hissi tersine döner: D tuşu aracın arkasını
+        // sağa yatırır. Arabayla geri manevra yaparken beklenen davranış budur.
+        if (drive < 0f)
+            turn = -turn;
+
         // Sağa dönüş = sol palet ileri, sağ palet geri.
         left = Mathf.Clamp(drive + turn, -1f, 1f);
         right = Mathf.Clamp(drive - turn, -1f, 1f);
