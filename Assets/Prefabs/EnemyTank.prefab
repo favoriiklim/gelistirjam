@@ -101,7 +101,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4662742141778971119}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -153,6 +153,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1108677313158208141}
   - component: {fileID: 8286152596042775467}
+  - component: {fileID: 3446516539478938059}
   m_Layer: 0
   m_Name: EnemyTank
   m_TagString: Untagged
@@ -175,6 +176,7 @@ Transform:
   m_Children:
   - {fileID: 1088721783775546074}
   - {fileID: 4733913856998270574}
+  - {fileID: 1149988862090357563}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!114 &8286152596042775467
@@ -200,3 +202,100 @@ MonoBehaviour:
   speedInfluence: 0.7
   stillRangeFactor: 0.45
   discoveryRange: 70
+--- !u!114 &3446516539478938059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8015863580714560554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45fe1aabd88d341449e52f634a1ef48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPatrol
+  waypoints: []
+  moveSpeed: 4
+  turnSpeed: 60
+  waitAtWaypoint: 2
+  pingPong: 1
+  arriveThreshold: 1.5
+  alignAngle: 5
+--- !u!1001 &612258357846232272
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1108677313158208141}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 247.6
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 247.6
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 247.6
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 02285944e499ed641b646f110f940831, type: 3}
+      propertyPath: m_Name
+      value: Meshy_AI_Top_Down_Tank_0808025343_texture
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 02285944e499ed641b646f110f940831, type: 3}
+--- !u!4 &1149988862090357563 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 02285944e499ed641b646f110f940831, type: 3}
+  m_PrefabInstance: {fileID: 612258357846232272}
+  m_PrefabAsset: {fileID: 0}
