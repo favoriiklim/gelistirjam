@@ -86,11 +86,11 @@ public class EnemyTurret : MonoBehaviour
     }
 
     /// <summary>
-    /// LateUpdate kullanılıyor çünkü modelle birlikte gelen Animator,
-    /// transform değerlerini LateUpdate'te ezer. Update'te yazılan dönüş
-    /// aynı karede silinir ve kule hiç dönmemiş gibi görünür.
+    /// Hesap Update'te yapılır ki IsEngaged aynı karede EnemyPatrol
+    /// tarafından taze okunabilsin; bir kare gecikirse araç durması
+    /// gerekirken bir adım daha atar.
     /// </summary>
-    private void LateUpdate()
+    private void Update()
     {
         if (turret == null)
             return;
@@ -98,17 +98,31 @@ public class EnemyTurret : MonoBehaviour
         PlayerTarget player = PlayerTarget.Instance;
         IsEngaged = player != null && spotter.Suspicion >= engageSuspicion;
 
-        float targetYaw = IsEngaged ? YawTowardPlayer(player) : ScanYaw();
+        float desired = IsEngaged ? YawTowardPlayer(player) : ScanYaw();
+
+        // Ofset hedeften düşülmeli. Sadece uygulama anında eklenirse kule
+        // her zaman ofset kadar yana nişan alır ama kod hizalandığını sanır.
+        float targetYaw = desired - yawOffset;
 
         currentYaw = Mathf.MoveTowardsAngle(currentYaw, targetYaw, traverseSpeed * Time.deltaTime);
+
+        float error = Mathf.Abs(Mathf.DeltaAngle(currentYaw, targetYaw));
+        IsAimedAtPlayer = IsEngaged && error <= aimTolerance;
+    }
+
+    /// <summary>
+    /// Transform yazımı LateUpdate'te: modelle gelen Animator transform
+    /// değerlerini LateUpdate'te ezer, Update'te yazılan dönüş silinir.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (turret == null)
+            return;
 
         // Dönüş, modelin kendi rotasyonunun ÜSTÜNE gövdenin dikey ekseni
         // etrafında uygulanıyor. Soldan çarpmak dönüşü parent'ın Y ekseninde
         // yapar; localEulerAngles'a doğrudan yazmak modelin rotasyonunu siler.
         turret.localRotation = Quaternion.Euler(0f, currentYaw + yawOffset, 0f) * baseLocalRotation;
-
-        float error = Mathf.Abs(Mathf.DeltaAngle(currentYaw, targetYaw));
-        IsAimedAtPlayer = IsEngaged && error <= aimTolerance;
     }
 
     /// <summary>Oyuncuya bakan açıyı gövdeye göre yerel açıya çevirir.</summary>
