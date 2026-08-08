@@ -42,6 +42,11 @@ public class EnemyGun : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float suspicionAfterMiss = 0.55f;
 
+    [Tooltip("Bekleyen atış, şüphe bu değerin altına düşerse iptal edilir. " +
+             "Kulenin devreye girme eşiğinden biraz düşük tutulmalı.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float cancelShotSuspicion = 0.3f;
+
     [Header("Geri bildirim")]
     [SerializeField] private AudioClip fireClip;
 
@@ -59,17 +64,22 @@ public class EnemyGun : MonoBehaviour
     public static event System.Action PlayerHit;
 
     private EnemySpotter spotter;
+    private EnemyTurret turret;
     private AudioSource fireSource;
     private VisorCamera visorCamera;
 
     private float reloadTimer;
     private int shotsFired;
 
+    // Nişan tamamlandı ama kule henüz hizalanmadı: atış sıraya alınır.
+    private bool shotPending;
+
     private Transform Muzzle => muzzle != null ? muzzle : transform;
 
     private void Awake()
     {
         spotter = GetComponent<EnemySpotter>();
+        turret = GetComponent<EnemyTurret>();
 
         fireSource = Muzzle.gameObject.AddComponent<AudioSource>();
         fireSource.playOnAwake = false;
@@ -94,6 +104,32 @@ public class EnemyGun : MonoBehaviour
     {
         if (reloadTimer > 0f)
             reloadTimer -= Time.deltaTime;
+
+        if (!shotPending)
+            return;
+
+        // Oyuncu bu arada kaçtıysa bekleyen atışı iptal et. Aksi hâlde
+        // atış askıda kalır ve düşman çok sonra, sebepsiz yere ateş eder.
+        if (spotter.Suspicion < cancelShotSuspicion)
+        {
+            shotPending = false;
+
+            // Sayacı yeniden kullanılabilir hâle getir; bu yapılmazsa
+            // nişan bir daha hiç tamamlanmaz ve düşman kalıcı olarak susar.
+            spotter.ResetAfterShot(spotter.Suspicion);
+            return;
+        }
+
+        if (reloadTimer > 0f)
+            return;
+
+        // Kule varsa hizalanmasını bekle. Bu bekleme oyuncunun kaçma
+        // penceresidir; kulenin dönüşü atışın gözle görülür fitilidir.
+        if (turret != null && !turret.IsAimedAtPlayer)
+            return;
+
+        shotPending = false;
+        Fire();
     }
 
     private void HandleAimComplete(EnemySpotter source)
@@ -105,7 +141,8 @@ public class EnemyGun : MonoBehaviour
             return;
         }
 
-        Fire();
+        // Ateş kararı Update'te veriliyor; kule hizalanana kadar bekleyecek.
+        shotPending = true;
     }
 
     private void Fire()

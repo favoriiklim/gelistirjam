@@ -18,6 +18,11 @@ public class EnemySpotter : MonoBehaviour
     [Range(10f, 360f)]
     [SerializeField] private float viewAngle = 80f;
 
+    [Tooltip("Yön farketmeksizin fark edilinen yarıçap. Mürettebatın " +
+             "yakındaki bir aracı duyması / göz ucuyla görmesi. " +
+             "Bu olmadan düşmanın tam arkasına park edip görünmez kalınabilir.")]
+    [SerializeField] private float awarenessRadius = 18f;
+
     [Tooltip("Görüşü kesen katmanlar: arazi, kayalar, tepeler. " +
              "Oyuncunun katmanı BURADA OLMAMALI, yoksa oyuncu kendini gizler.")]
     [SerializeField] private LayerMask obstacleMask;
@@ -72,6 +77,7 @@ public class EnemySpotter : MonoBehaviour
 
     public float ViewAngle => viewAngle;
     public float ViewDistance => viewDistance;
+    public float AwarenessRadius => awarenessRadius;
     public Vector3 EyeWorldPosition => EyePosition;
 
     /// <summary>
@@ -88,7 +94,41 @@ public class EnemySpotter : MonoBehaviour
     private bool hasReported;
 
     private Vector3 EyePosition => eye != null ? eye.position : transform.position;
-    private Vector3 EyeForward => eye != null ? eye.forward : transform.forward;
+
+    private bool warnedAboutEyeAxis;
+
+    /// <summary>
+    /// Görüş yönü. Kara aracı olduğu için daima yataya düzleştirilir:
+    /// namlu hafif eğik durursa koni yere ya da göğe kaçmasın.
+    ///
+    /// Z-up çizilmiş modeller Unity'ye -90 X rotasyonuyla gelir; o durumda
+    /// ileri yön tam dikey olur ve yatay bileşen kalmaz. Bu sessizce
+    /// geçilirse görüş sistemi hiç çalışmaz.
+    /// </summary>
+    private Vector3 EyeForward
+    {
+        get
+        {
+            Vector3 forward = eye != null ? eye.forward : transform.forward;
+            Vector3 flat = new Vector3(forward.x, 0f, forward.z);
+
+            if (flat.sqrMagnitude > 0.0001f)
+                return flat.normalized;
+
+            if (!warnedAboutEyeAxis)
+            {
+                warnedAboutEyeAxis = true;
+                Debug.LogWarning(
+                    $"{name}: Eye objesinin ileri ekseni tam dikey. Muzzle'ın " +
+                    "Rotation X değerini kulenin rotasyonunu sıfırlayacak şekilde " +
+                    "ayarla (kule -90 ise Muzzle 90). Şimdilik gövde yönü kullanılıyor.", this);
+            }
+
+            // Kurulum düzeltilene kadar gövdenin yönüne düş.
+            Vector3 fallback = new Vector3(transform.forward.x, 0f, transform.forward.z);
+            return fallback.sqrMagnitude > 0.0001f ? fallback.normalized : Vector3.forward;
+        }
+    }
 
     private void OnEnable() => active.Add(this);
     private void OnDisable() => active.Remove(this);
@@ -120,7 +160,11 @@ public class EnemySpotter : MonoBehaviour
         if (HasLineOfSight)
         {
             // Yakınlık çarpanı: menzilin ucunda 0, dibinde 1.
-            float proximity = 1f - Mathf.Clamp01(distance / effectiveDistance);
+            // Referans iki menzilin büyüğü olmalı; yoksa yakın algıyla
+            // fark edilen ama koni menzilinin dışındaki oyuncuda oran
+            // sıfır çıkar ve sayaç hiç dolmaz.
+            float referenceDistance = Mathf.Max(effectiveDistance, awarenessRadius);
+            float proximity = 1f - Mathf.Clamp01(distance / referenceDistance);
 
             // Hız çarpanı: dururken speedInfluence kadar azalır, tam hızda 1 olur.
             float speedFactor = Mathf.Lerp(1f - speedInfluence, 1f, player.NormalizedSpeed);
@@ -179,18 +223,23 @@ public class EnemySpotter : MonoBehaviour
     /// Ucuzdan pahalıya üç kontrol: mesafe, açı, engel.
     /// Raycast en pahalısı olduğu için en sona bırakılır.
     /// </summary>
-    private bool CanSee(Vector3 targetPosition, float maxDistance, out float distance)
+    private bool CanSee(Vector3 targetPosition, float coneDistance, out float distance)
     {
         Vector3 toTarget = targetPosition - EyePosition;
         distance = toTarget.magnitude;
 
-        if (distance > maxDistance)
+        // İleri bakan uzun koni: kulenin baktığı yön.
+        bool inCone = distance <= coneDistance
+                      && Vector3.Angle(EyeForward, toTarget) <= viewAngle * 0.5f;
+
+        // Çevredeki kısa 360 derece alan. Bilerek hızdan bağımsız:
+        // on metredeki bir tank, dursa da belli olur.
+        bool inAwareness = distance <= awarenessRadius;
+
+        if (!inCone && !inAwareness)
             return false;
 
-        if (Vector3.Angle(EyeForward, toTarget) > viewAngle * 0.5f)
-            return false;
-
-        // Arada engel varsa görüş kesilir.
+        // Her iki durumda da arada engel varsa görüş kesilir.
         return !Physics.Linecast(EyePosition, targetPosition, obstacleMask);
     }
 
@@ -217,6 +266,10 @@ public class EnemySpotter : MonoBehaviour
 
         UnityEditor.Handles.color = new Color(0.3f, 0.8f, 1f, 0.14f);
         UnityEditor.Handles.DrawSolidArc(origin, Vector3.up, leftEdge, viewAngle, viewDistance * stillRangeFactor);
+
+        // Yön farketmeksizin fark edilinen 360 derece alan.
+        UnityEditor.Handles.color = new Color(1f, 0.35f, 0.25f, 0.18f);
+        UnityEditor.Handles.DrawSolidDisc(origin, Vector3.up, awarenessRadius);
 #endif
     }
 }

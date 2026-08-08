@@ -33,13 +33,48 @@ public class EnemyPatrol : MonoBehaviour
     [Range(1f, 90f)]
     [SerializeField] private float alignAngle = 5f;
 
+    [Header("Nişan alınca")]
+    [Tooltip("Kule yoksa devriyenin duracağı şüphe eşiği. Kule varsa " +
+             "onun kendi eşiği kullanılır ve bu değer yok sayılır.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float haltSuspicion = 0.35f;
+
     private int targetIndex;
     private int direction = 1;
     private float waitTimer;
 
+    private EnemyTurret turret;
+    private EnemySpotter spotter;
+
+    private void Awake()
+    {
+        turret = GetComponent<EnemyTurret>();
+        spotter = GetComponent<EnemySpotter>();
+    }
+
+    /// <summary>
+    /// Nişan alınırken araç durur. Hem gerçekçi hem de oyuncuya ikinci bir
+    /// uyarı kanalı: kule dönüşünü göremeyecek kadar uzaktaki oyuncu bile
+    /// devriyenin durduğunu fark eder.
+    /// </summary>
+    private bool IsHalted
+    {
+        get
+        {
+            // Tek eşik üzerinden yürüsün diye kule varsa onun kararı geçerli.
+            if (turret != null)
+                return turret.IsEngaged;
+
+            return spotter != null && spotter.Suspicion >= haltSuspicion;
+        }
+    }
+
     private void Update()
     {
         if (waypoints == null || waypoints.Count == 0)
+            return;
+
+        if (IsHalted)
             return;
 
         Transform target = waypoints[targetIndex];
