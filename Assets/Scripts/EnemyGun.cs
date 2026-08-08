@@ -63,6 +63,12 @@ public class EnemyGun : MonoBehaviour
     /// <summary>Oyuncu vurulduğunda tetiklenir. GameManager dinler.</summary>
     public static event System.Action PlayerHit;
 
+    /// <summary>
+    /// Ateş edildiğinde tetiklenir: isabet edildi mi ve mermi nereye düştü.
+    /// Görsel efektler bunu dinler; ateş kararı bu sınıfta, çizim başka yerde.
+    /// </summary>
+    public event System.Action<bool, Vector3> Fired;
+
     private EnemySpotter spotter;
     private EnemyTurret turret;
     private AudioSource fireSource;
@@ -159,13 +165,20 @@ public class EnemyGun : MonoBehaviour
 
         bool hit = ResolveHit(player);
 
+        // Işkalayan mermi oyuncunun yakınına düşer; isabet edense üstüne.
+        Vector3 impactPoint = hit
+            ? player.Position
+            : player.Position + new Vector3(Random.Range(-6f, 6f), 0f, Random.Range(-6f, 6f));
+
+        Fired?.Invoke(hit, impactPoint);
+
         if (hit)
         {
             PlayerHit?.Invoke();
             return;
         }
 
-        HandleMiss(player);
+        HandleMiss(impactPoint);
     }
 
     /// <summary>
@@ -188,19 +201,14 @@ public class EnemyGun : MonoBehaviour
         return Random.value < hitChance;
     }
 
-    private void HandleMiss(PlayerTarget player)
+    private void HandleMiss(Vector3 impactPoint)
     {
         spotter.ResetAfterShot(suspicionAfterMiss);
 
-        // Mermi oyuncunun yakınına düşer; ses ve sarsıntı oradan gelir.
         if (missImpactClip != null)
-        {
-            Vector3 impactPoint = player.Position + new Vector3(
-                Random.Range(-6f, 6f), 0f, Random.Range(-6f, 6f));
-
             AudioSource.PlayClipAtPoint(missImpactClip, impactPoint, fireVolume);
-        }
 
+        PlayerTarget player = PlayerTarget.Instance;
         if (visorCamera == null && player != null)
             visorCamera = player.GetComponentInChildren<VisorCamera>();
 
