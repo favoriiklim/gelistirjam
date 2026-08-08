@@ -87,15 +87,40 @@ public class SpottingIndicator : MonoBehaviour
 
         float speed = PlayerTarget.Instance != null ? PlayerTarget.Instance.NormalizedSpeed : 0f;
 
-        var rect = new Rect(12f, 12f, 420f, 22f);
+        var rect = new Rect(12f, 12f, 700f, 22f);
         GUI.Label(rect, $"Hız: {speed:F2}   Şüphe: {EnemySpotter.HighestSuspicion():F2}", debugStyle);
+
+        Vector3 playerPosition = PlayerTarget.Instance != null
+            ? PlayerTarget.Instance.Position
+            : Vector3.zero;
 
         var spotters = EnemySpotter.Active;
         for (int i = 0; i < spotters.Count; i++)
         {
+            EnemySpotter spotter = spotters[i];
+
             rect.y += 20f;
-            string sight = spotters[i].HasLineOfSight ? "GÖRÜYOR" : "kayıp";
-            GUI.Label(rect, $"  {spotters[i].name}: {spotters[i].Suspicion:F2}  [{sight}]", debugStyle);
+            float distance = Vector3.Distance(playerPosition, spotter.EyeWorldPosition);
+            string sight = spotter.HasLineOfSight ? "GÖRÜYOR" : "kayıp";
+
+            GUI.Label(rect,
+                $"  {spotter.name}: şüphe {spotter.Suspicion:F2}  mesafe {distance:F0}m  [{sight}]",
+                debugStyle);
+
+            // Zincirin nerede koptuğu görünsün: görüş → şüphe → kule → nişan.
+            var turret = spotter.GetComponent<EnemyTurret>();
+            if (turret == null)
+                continue;
+
+            rect.y += 20f;
+            string state = turret.IsAimedAtPlayer ? "NİŞAN ALDI"
+                         : turret.IsEngaged ? "sana dönüyor"
+                         : "tarıyor";
+
+            GUI.Label(rect,
+                $"      kule: {state}  açı {turret.CurrentYaw:F0}° → {turret.TargetYaw:F0}°  " +
+                $"(okuduğu şüphe {turret.SpotterSuspicion:F2} / eşik {turret.EngageSuspicion:F2})",
+                debugStyle);
         }
     }
 }

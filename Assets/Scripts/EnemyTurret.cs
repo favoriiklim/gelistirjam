@@ -67,6 +67,17 @@ public class EnemyTurret : MonoBehaviour
     /// </summary>
     public bool IsEngaged { get; private set; }
 
+    /// <summary>Kulenin şu anki ve hedeflediği yerel açısı. Hata ayıklama için.</summary>
+    public float CurrentYaw => currentYaw;
+    public float TargetYaw { get; private set; }
+
+    /// <summary>
+    /// Kulenin gerçekte okuduğu şüphe ve eşiği. Bu değer ekrandaki düşman
+    /// satırıyla tutmuyorsa objede ikinci bir EnemySpotter vardır.
+    /// </summary>
+    public float SpotterSuspicion => spotter != null ? spotter.Suspicion : -1f;
+    public float EngageSuspicion => engageSuspicion;
+
     private EnemySpotter spotter;
     private float currentYaw;
 
@@ -103,6 +114,7 @@ public class EnemyTurret : MonoBehaviour
         // Ofset hedeften düşülmeli. Sadece uygulama anında eklenirse kule
         // her zaman ofset kadar yana nişan alır ama kod hizalandığını sanır.
         float targetYaw = desired - yawOffset;
+        TargetYaw = targetYaw;
 
         currentYaw = Mathf.MoveTowardsAngle(currentYaw, targetYaw, traverseSpeed * Time.deltaTime);
 
@@ -119,10 +131,14 @@ public class EnemyTurret : MonoBehaviour
         if (turret == null)
             return;
 
-        // Dönüş, modelin kendi rotasyonunun ÜSTÜNE gövdenin dikey ekseni
-        // etrafında uygulanıyor. Soldan çarpmak dönüşü parent'ın Y ekseninde
-        // yapar; localEulerAngles'a doğrudan yazmak modelin rotasyonunu siler.
-        turret.localRotation = Quaternion.Euler(0f, currentYaw + yawOffset, 0f) * baseLocalRotation;
+        // yawOffset burada EKLENMEZ: hedef açı hesaplanırken zaten düşülüyor.
+        // İki yerde birden uygulanırsa etkisi sıfırlanır ve kule, modelin
+        // namlu ofseti kadar sürekli yana nişan alır.
+        //
+        // Dönüş modelin kendi rotasyonunun ÜSTÜNE biniyor. Soldan çarpmak
+        // dönüşü parent'ın dikey ekseninde yapar; localEulerAngles'a doğrudan
+        // yazmak modelin rotasyonunu siler ve kule yan yatar.
+        turret.localRotation = Quaternion.Euler(0f, currentYaw, 0f) * baseLocalRotation;
     }
 
     /// <summary>Oyuncuya bakan açıyı gövdeye göre yerel açıya çevirir.</summary>
