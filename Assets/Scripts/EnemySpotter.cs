@@ -43,11 +43,26 @@ public class EnemySpotter : MonoBehaviour
     [Range(0.1f, 1f)]
     [SerializeField] private float stillRangeFactor = 0.45f;
 
+    [Header("Keşif")]
+    [Tooltip("Oyuncunun bu aracı vizörden görüp haritaya kaydedebileceği azami mesafe. " +
+             "Görüş hattı da açık olmalı; tepenin ardındaki düşman keşfedilmez.")]
+    [SerializeField] private float discoveryRange = 70f;
+
     /// <summary>0-1 arası şüphe seviyesi. 1 olduğunda oyuncu fark edilmiştir.</summary>
     public float Suspicion { get; private set; }
 
     /// <summary>Bu karede oyuncuyu görüyor mu.</summary>
     public bool HasLineOfSight { get; private set; }
+
+    /// <summary>
+    /// Oyuncu bu aracı en az bir kez gördü mü. Bir kez keşfedilen düşman
+    /// haritada kalıcı kalır; sürücünün hafızasını temsil eder.
+    /// </summary>
+    public bool IsDiscovered { get; private set; }
+
+    public float ViewAngle => viewAngle;
+    public float ViewDistance => viewDistance;
+    public Vector3 EyeWorldPosition => EyePosition;
 
     /// <summary>Herhangi bir düşman oyuncuyu tamamen fark ettiğinde bir kez tetiklenir.</summary>
     public static event System.Action<EnemySpotter> PlayerSpotted;
@@ -105,11 +120,34 @@ public class EnemySpotter : MonoBehaviour
             Suspicion = Mathf.Clamp01(Suspicion - suspicionDecay * Time.deltaTime);
         }
 
+        UpdateDiscovery(player.Position);
+
         if (Suspicion >= 1f && !hasReported)
         {
             hasReported = true;
             PlayerSpotted?.Invoke(this);
         }
+    }
+
+    /// <summary>
+    /// Oyuncunun bu aracı görüp görmediğini kontrol eder. Bilgi keşifle
+    /// kazanılsın diye harita sadece keşfedilmiş düşmanları gösterir.
+    /// </summary>
+    private void UpdateDiscovery(Vector3 playerPosition)
+    {
+        // Bir kez keşfedildiyse tekrar sorgulamaya gerek yok; raycast'ten tasarruf.
+        if (IsDiscovered)
+            return;
+
+        Vector3 eye = EyePosition;
+        if (Vector3.Distance(playerPosition, eye) > discoveryRange)
+            return;
+
+        // Tepenin ardındaki düşman keşfedilmemeli.
+        if (Physics.Linecast(playerPosition, eye, obstacleMask))
+            return;
+
+        IsDiscovered = true;
     }
 
     /// <summary>
