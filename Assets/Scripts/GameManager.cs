@@ -32,14 +32,14 @@ public class GameManager : MonoBehaviour
 
     private void OnEnable()
     {
-        EnemySpotter.PlayerSpotted += HandlePlayerSpotted;
+        EnemyGun.PlayerHit += HandlePlayerHit;
     }
 
     private void OnDisable()
     {
         // Statik olaydan çıkmak şart: sahne yeniden yüklendiğinde ölü
         // GameManager'lar dinlemeye devam eder ve oyun anında biter.
-        EnemySpotter.PlayerSpotted -= HandlePlayerSpotted;
+        EnemyGun.PlayerHit -= HandlePlayerHit;
 
         if (Instance == this)
             Instance = null;
@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
             Restart();
     }
 
-    private void HandlePlayerSpotted(EnemySpotter spotter)
+    private void HandlePlayerHit()
     {
         EndGame(GameState.Lost);
     }

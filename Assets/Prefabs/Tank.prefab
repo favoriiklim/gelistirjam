@@ -42,6 +42,7 @@ GameObject:
   - component: {fileID: 709463908215065603}
   - component: {fileID: 3316505059420436753}
   - component: {fileID: 7472118569344346718}
+  - component: {fileID: 2082109307781830256}
   - component: {fileID: 8033475732556946834}
   - component: {fileID: 7197148859329229497}
   - component: {fileID: 7568040867072749101}
@@ -119,6 +120,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &2082109307781830256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4534781504912579429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89a6c8fb4abc8a1469d6dba032ee68b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VehicleEngineAudio
+  lowClip: {fileID: 8300000, guid: de238917e037c8a469d3030136505291, type: 3}
+  highClip: {fileID: 0}
+  trackClip: {fileID: 0}
+  idleVolume: 0.35
+  maxVolume: 0.85
+  trackVolume: 0.5
+  idlePitch: 0.9
+  maxPitch: 1.1
+  spatialBlend: 0
+  maxDistance: 120
+  smoothing: 6
 --- !u!114 &8033475732556946834
 MonoBehaviour:
   m_ObjectHideFlags: 0

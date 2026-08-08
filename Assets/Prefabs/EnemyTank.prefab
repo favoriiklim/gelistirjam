@@ -153,6 +153,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1108677313158208141}
   - component: {fileID: 8286152596042775467}
+  - component: {fileID: 1567738029954297316}
   - component: {fileID: 3446516539478938059}
   m_Layer: 0
   m_Name: EnemyTank
@@ -202,6 +203,30 @@ MonoBehaviour:
   speedInfluence: 0.7
   stillRangeFactor: 0.45
   discoveryRange: 70
+--- !u!114 &1567738029954297316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8015863580714560554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89a6c8fb4abc8a1469d6dba032ee68b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VehicleEngineAudio
+  lowClip: {fileID: 8300000, guid: de238917e037c8a469d3030136505291, type: 3}
+  highClip: {fileID: 0}
+  trackClip: {fileID: 0}
+  volumeScale: 0.2
+  idleVolume: 0.35
+  maxVolume: 0.85
+  trackVolume: 0.5
+  idlePitch: 0.9
+  maxPitch: 1.1
+  spatialBlend: 0
+  maxDistance: 120
+  smoothing: 6
 --- !u!114 &3446516539478938059
 MonoBehaviour:
   m_ObjectHideFlags: 0

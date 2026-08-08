@@ -60,12 +60,25 @@ public class EnemySpotter : MonoBehaviour
     /// </summary>
     public bool IsDiscovered { get; private set; }
 
+    /// <summary>
+    /// Atıştan sonra nişanı geri alır. Sayaç sıfırlanmaz; düşman zaten
+    /// oyuncuyu biliyor, sadece yeniden nişan alması gerekiyor.
+    /// </summary>
+    public void ResetAfterShot(float newSuspicion)
+    {
+        Suspicion = Mathf.Clamp01(newSuspicion);
+        hasReported = false;
+    }
+
     public float ViewAngle => viewAngle;
     public float ViewDistance => viewDistance;
     public Vector3 EyeWorldPosition => EyePosition;
 
-    /// <summary>Herhangi bir düşman oyuncuyu tamamen fark ettiğinde bir kez tetiklenir.</summary>
-    public static event System.Action<EnemySpotter> PlayerSpotted;
+    /// <summary>
+    /// Nişan alma tamamlandığında tetiklenir. Sayaç "fark edilme" değil
+    /// "nişan alma süresi" anlamına gelir; kaybetme kararını EnemyGun verir.
+    /// </summary>
+    public event System.Action<EnemySpotter> AimComplete;
 
     private static readonly List<EnemySpotter> active = new List<EnemySpotter>();
 
@@ -125,7 +138,19 @@ public class EnemySpotter : MonoBehaviour
         if (Suspicion >= 1f && !hasReported)
         {
             hasReported = true;
-            PlayerSpotted?.Invoke(this);
+
+            if (AimComplete == null)
+            {
+                // Topu olmayan araç nişan alır ama ateş edemez. Sessizce
+                // yutulursa oyun kaybedilemez hâle gelir ve sebebi bulunmaz.
+                Debug.LogWarning($"{name}: nişan tamamlandı ama EnemyGun yok, ateş edilemiyor.", this);
+                Suspicion = 0.5f;
+                hasReported = false;
+            }
+            else
+            {
+                AimComplete.Invoke(this);
+            }
         }
     }
 

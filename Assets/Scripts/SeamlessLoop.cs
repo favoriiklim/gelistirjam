@@ -3,40 +3,43 @@ using UnityEngine;
 /// <summary>
 /// Başı ve sonu uyuşmayan bir klibi dikişsiz döngüye çevirir.
 ///
-/// Aynı klip iki kaynakta, yarım klip arayla çalınır. Kazançlar sinüs
-/// eğrisiyle sürülür: bir kaynağın kopuk noktası geldiğinde o kaynak
-/// tamamen kısıktır, diğeri tam açıktır. sin² + cos² = 1 olduğu için
-/// toplam ses gücü sabit kalır, dalgalanma duyulmaz.
+/// Aynı klip iki kaynakta, yarım klip arayla çalınır. Her kaynağın kazancı
+/// kendi konumundan sinüs eğrisiyle hesaplanır: bir kaynak kendi kopuk
+/// noktasına gelirken tamamen kısılır, o sırada diğeri klibin ortasındadır.
+/// sin² + cos² = 1 olduğu için toplam ses gücü sabit kalır.
 ///
-/// Ses dosyalarını Audacity'de düzenlemeye gerek bırakmaz.
+/// Ses dosyalarını düzenlemeye gerek bırakmaz.
 /// </summary>
 public class SeamlessLoop
 {
     private readonly AudioSource first;
     private readonly AudioSource second;
-    private readonly float clipLength;
+    private readonly int clipSamples;
 
     private float volume = 1f;
+    private bool offsetVerified;
 
     public bool IsValid => first != null;
 
     public SeamlessLoop(Transform parent, string name, AudioClip clip,
                         float spatialBlend, float maxDistance)
     {
-        if (clip == null)
+        if (clip == null || clip.samples <= 0)
             return;
 
-        clipLength = clip.length;
+        clipSamples = clip.samples;
 
         first = CreateSource(parent, name + "_A", clip, spatialBlend, maxDistance);
         second = CreateSource(parent, name + "_B", clip, spatialBlend, maxDistance);
 
+        // Konum Play'den ÖNCE verilmeli. Oynatma başladıktan sonra yazmak
+        // güvenilir değildir; kaynak 0'dan başlar, iki dikiş üst üste biner
+        // ve tam da kopuk noktada ses kesilir.
+        first.timeSamples = 0;
+        second.timeSamples = clipSamples / 2;
+
         first.Play();
         second.Play();
-
-        // İkinci kaynak yarım klip ileriden başlar; kopuk noktalar böylece
-        // hiçbir zaman aynı anda denk gelmez.
-        second.time = clipLength * 0.5f;
     }
 
     private static AudioSource CreateSource(Transform parent, string name, AudioClip clip,
@@ -64,8 +67,7 @@ public class SeamlessLoop
         if (!IsValid)
             return;
 
-        // İki kaynak aynı perdede kalmalı, yoksa aradaki yarım klip
-        // farkı kayar ve dikiş yeri açığa çıkar.
+        // İki kaynak aynı perdede kalmalı, yoksa aradaki yarım klip farkı kayar.
         first.pitch = value;
         second.pitch = value;
     }
@@ -73,13 +75,44 @@ public class SeamlessLoop
     /// <summary>Her karede çağrılmalı; çapraz geçiş kazançlarını uygular.</summary>
     public void Update()
     {
-        if (!IsValid || clipLength <= 0f)
+        if (!IsValid)
             return;
 
-        float phase = first.time / clipLength;
-        float otherPhase = Mathf.Repeat(phase + 0.5f, 1f);
+        VerifyOffsetOnce();
 
-        first.volume = Mathf.Sin(phase * Mathf.PI) * volume;
-        second.volume = Mathf.Sin(otherPhase * Mathf.PI) * volume;
+        // Kazançlar her kaynağın KENDİ konumundan hesaplanıyor. Böylece
+        // kaynaklar bir sebeple kaysa bile her biri kendi dikişinde susar.
+        first.volume = GainFor(first) * volume;
+        second.volume = GainFor(second) * volume;
+    }
+
+    private float GainFor(AudioSource source)
+    {
+        float phase = source.timeSamples / (float)clipSamples;
+        return Mathf.Sin(Mathf.Clamp01(phase) * Mathf.PI);
+    }
+
+    /// <summary>
+    /// İlk karede aradaki yarım klip farkının gerçekten oluştuğunu doğrular.
+    /// Oluşmadıysa düzeltir; iki kaynak aynı fazdayken dikiş yerinde
+    /// ses tamamen kesilir ve sorun kulakta net duyulur.
+    /// </summary>
+    private void VerifyOffsetOnce()
+    {
+        if (offsetVerified)
+            return;
+
+        // Kaynaklar gerçekten çalmaya başlayana kadar ölçüm anlamsız.
+        if (!first.isPlaying || !second.isPlaying)
+            return;
+
+        offsetVerified = true;
+
+        int offset = Mathf.Abs(second.timeSamples - first.timeSamples);
+        int expected = clipSamples / 2;
+
+        // Beşte birlik sapmaya kadar tolerans; ötesinde düzelt.
+        if (Mathf.Abs(offset - expected) > clipSamples / 5)
+            second.timeSamples = (first.timeSamples + expected) % clipSamples;
     }
 }

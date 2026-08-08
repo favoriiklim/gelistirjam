@@ -22,8 +22,22 @@ public class VisorCamera : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float idleShake = 0.15f;
 
+    [Header("Darbe")]
+    [Tooltip("Dışarıdan gelen sarsıntının saniyede ne kadar söndüğü.")]
+    [SerializeField] private float impulseDecay = 2.5f;
+
     private Vector3 basePosition;
     private Quaternion baseRotation;
+    private float impulse;
+
+    /// <summary>
+    /// Anlık sarsıntı ekler. Yakına düşen mermi gibi olaylar için;
+    /// hız sarsıntısının üstüne biner ve zamanla söner.
+    /// </summary>
+    public void AddShake(float amount)
+    {
+        impulse = Mathf.Max(impulse, amount);
+    }
 
     private void Awake()
     {
@@ -38,7 +52,12 @@ public class VisorCamera : MonoBehaviour
     private void LateUpdate()
     {
         float speed = tankController != null ? tankController.NormalizedSpeed : 0f;
-        float intensity = Mathf.Lerp(idleShake, 1f, speed);
+
+        impulse = Mathf.MoveTowards(impulse, 0f, impulseDecay * Time.deltaTime);
+
+        // Darbe hız sarsıntısının üstüne biniyor; yakına düşen mermi
+        // dururken de hissedilmeli.
+        float intensity = Mathf.Lerp(idleShake, 1f, speed) + impulse;
 
         // Perlin gürültüsü rastgeleye göre daha yumuşak salınır; Random.value
         // kullanmak titreşimi sinirli ve dijital gösterir.

@@ -22,14 +22,19 @@ public class VehicleEngineAudio : MonoBehaviour
     [SerializeField] private AudioClip trackClip;
 
     [Header("Seviye")]
+    [Tooltip("Tüm motor seslerini birden kısan çarpan. Dengeyi bozmadan " +
+             "aracın toplam sesini ayarlamak için önce bunu kullan.")]
     [Range(0f, 1f)]
-    [SerializeField] private float idleVolume = 0.35f;
+    [SerializeField] private float volumeScale = 1f;
 
     [Range(0f, 1f)]
-    [SerializeField] private float maxVolume = 0.85f;
+    [SerializeField] private float idleVolume = 0.1f;
 
     [Range(0f, 1f)]
-    [SerializeField] private float trackVolume = 0.5f;
+    [SerializeField] private float maxVolume = 0.35f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float trackVolume = 0.2f;
 
     [Header("Perde")]
     [Tooltip("İki katman varken perde değişimi hafif tutulmalı; " +
@@ -82,7 +87,7 @@ public class VehicleEngineAudio : MonoBehaviour
         bool gameOver = GameManager.Instance != null && GameManager.Instance.State != GameState.Playing;
         float gate = gameOver ? 0f : 1f;
 
-        float level = Mathf.Lerp(idleVolume, maxVolume, smoothedSpeed) * gate;
+        float level = Mathf.Lerp(idleVolume, maxVolume, smoothedSpeed) * gate * volumeScale;
         float pitch = Mathf.Lerp(idlePitch, maxPitch, smoothedSpeed);
 
         if (highLoop.IsValid)
@@ -100,7 +105,7 @@ public class VehicleEngineAudio : MonoBehaviour
         lowLoop.SetPitch(pitch);
         highLoop.SetPitch(pitch);
 
-        trackLoop.SetVolume(smoothedSpeed * trackVolume * gate);
+        trackLoop.SetVolume(smoothedSpeed * trackVolume * gate * volumeScale);
 
         lowLoop.Update();
         highLoop.Update();
