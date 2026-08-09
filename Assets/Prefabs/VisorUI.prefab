@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4118767314769279158
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 985784979325737297}
+  - component: {fileID: 4764724036630440441}
+  - component: {fileID: 3818191856511573084}
+  - component: {fileID: 3752444061142793252}
+  - component: {fileID: 6112831035674713610}
+  m_Layer: 0
+  m_Name: VisorUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &985784979325737297
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118767314769279158}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4764724036630440441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118767314769279158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b88413d550245cc48aa8eb156bd49b82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisorMask
+  slitWidth: 0.55
+  slitHeight: 0.18
+  slitCenterY: 0.52
+  maskColor: {r: 0, g: 0, b: 0, a: 1}
+--- !u!114 &3818191856511573084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118767314769279158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83f36a83dc7147c4991c2c2a93a412f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpottingIndicator
+  alertColor: {r: 0.6, g: 0.05, b: 0.02, a: 1}
+  maxAlpha: 0.4
+  pulseThreshold: 0.5
+  pulseSpeed: 6
+  showDebugReadout: 1
+--- !u!114 &3752444061142793252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118767314769279158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4b6675e733fdd94cb42edf9aae4ea52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameOverUI
+  wonMessage: "L\u0130MANA ULA\u015ETIN"
+  lostMessage: "FARK ED\u0130LD\u0130N"
+  hintMessage: "Yeniden ba\u015Flatmak i\xE7in R"
+  wonColor: {r: 0.75, g: 0.7, b: 0.45, a: 1}
+  lostColor: {r: 0.7, g: 0.2, b: 0.12, a: 1}
+  backdropColor: {r: 0, g: 0, b: 0, a: 0.82}
+--- !u!114 &6112831035674713610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118767314769279158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93584af20d165c945bdbe69bcd4b1b50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapUI
+  worldOrigin: {x: -100, y: -100}
+  worldSize: {x: 200, y: 200}
+  mapSprite: {fileID: 0}
+  mapFallbackColor: {r: 0.78, g: 0.71, b: 0.55, a: 1}
+  backdropColor: {r: 0, g: 0, b: 0, a: 0.75}
+  screenFill: 0.8
+  playerMarkerColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
+  goalMarkerColor: {r: 0.15, g: 0.55, b: 0.25, a: 1}
+  markerSize: 26
+  goal: {fileID: 0}
+  showDiscoveredEnemies: 1
+  enemyMarkerColor: {r: 0.55, g: 0.13, b: 0.1, a: 1}
+  coneCalmColor: {r: 0.5, g: 0.15, b: 0.12, a: 0.22}
+  coneAlertColor: {r: 0.9, g: 0.2, b: 0.15, a: 0.45}
+  pauseWhileOpen: 0
