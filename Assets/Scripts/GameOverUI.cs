@@ -10,7 +10,8 @@ public class GameOverUI : MonoBehaviour
 {
     [Header("Metinler")]
     [SerializeField] private string wonMessage = "LİMANA ULAŞTIN";
-    [SerializeField] private string lostMessage = "FARK EDİLDİN";
+    [SerializeField] private string lostMessage = "VURULDUN";
+    [SerializeField] private string flippedMessage = "TANK DEVRİLDİ";
     [SerializeField] private string hintMessage = "Yeniden başlatmak için R";
 
     [Header("Renkler")]
@@ -52,8 +53,12 @@ public class GameOverUI : MonoBehaviour
 
         bool won = state == GameState.Won;
 
+        // Kaybetme sebebini GameManager belirler, metnini bu katman seçer.
+        bool flipped = !won && GameManager.Instance != null
+                       && GameManager.Instance.Cause == LossCause.Flipped;
+
         backdrop.color = backdropColor;
-        titleText.text = won ? wonMessage : lostMessage;
+        titleText.text = won ? wonMessage : flipped ? flippedMessage : lostMessage;
         titleText.color = won ? wonColor : lostColor;
         hintText.text = hintMessage;
 

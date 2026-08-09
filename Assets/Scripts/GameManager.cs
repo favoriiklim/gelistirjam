@@ -9,6 +9,13 @@ public enum GameState
     Lost
 }
 
+/// <summary>Kaybetme sebebi. Metni UI seçer, karar burada verilir.</summary>
+public enum LossCause
+{
+    Shot,
+    Flipped
+}
+
 /// <summary>
 /// Kazanma, kaybetme ve yeniden başlatma kararlarını verir.
 /// Hiçbir şey çizmez; durumu olay olarak yayınlar, UI dinler.
@@ -18,6 +25,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public GameState State { get; private set; } = GameState.Playing;
+
+    /// <summary>Son kaybetme sebebi. GameOverUI hangi metni göstereceğini buradan seçer.</summary>
+    public LossCause Cause { get; private set; } = LossCause.Shot;
 
     /// <summary>Oyun durumu değiştiğinde tetiklenir.</summary>
     public event System.Action<GameState> StateChanged;
@@ -57,6 +67,14 @@ public class GameManager : MonoBehaviour
 
     private void HandlePlayerHit()
     {
+        Cause = LossCause.Shot;
+        EndGame(GameState.Lost);
+    }
+
+    /// <summary>Tank devrildiğinde FlipDetector tarafından çağrılır.</summary>
+    public void ReportTankFlipped()
+    {
+        Cause = LossCause.Flipped;
         EndGame(GameState.Lost);
     }
 

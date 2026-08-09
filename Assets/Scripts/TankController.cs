@@ -24,6 +24,16 @@ public class TankController : MonoBehaviour
     [Tooltip("Saniyede kaç derece dönülür.")]
     [SerializeField] private float turnSpeed = 35f;
 
+    [Header("Eğim")]
+    [Tooltip("Açık: tank yokuşta öne arkaya eğilir, ama devrilebilir. " +
+             "Kapalı: gövde her zaman düz kalır, devrilmek imkânsızdır.")]
+    [SerializeField] private bool allowTilt = true;
+
+    [Tooltip("Ağırlık merkezinin gövde merkezinden ne kadar aşağıda olduğu. " +
+             "Devrilmeyi engelleyen asıl ayar budur; gerçek tanklarda da öyle. " +
+             "Tank hâlâ takla atıyorsa bu değeri daha da düşür.")]
+    [SerializeField] private float centerOfMassHeight = -0.6f;
+
     private Rigidbody rb;
 
     // -1 ile 1 arası palet girdileri. Dışarıdan SetTrackInput ile yazılır.
@@ -40,8 +50,13 @@ public class TankController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        // Tank devrilmesin; dönüşü biz elle uyguluyoruz.
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        rb.constraints = allowTilt
+            ? RigidbodyConstraints.None
+            : RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        // Ağırlık merkezini aşağı almak devrilmeyi ciddi ölçüde zorlaştırır.
+        rb.centerOfMass = new Vector3(0f, centerOfMassHeight, 0f);
+
         rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
@@ -82,7 +97,11 @@ public class TankController : MonoBehaviour
         if (Mathf.Abs(turnInput) > 0.001f)
         {
             float yaw = turnInput * turnSpeed * Time.fixedDeltaTime;
-            rb.MoveRotation(rb.rotation * Quaternion.Euler(0f, yaw, 0f));
+
+            // Dönüş dünyanın dikey ekseninde olmalı. Soldan çarpmak bunu
+            // sağlar; sağdan çarpsaydık tank yokuşta kendi eğik ekseninde
+            // dönerdi ve yamaçta direksiyon garipleşirdi.
+            rb.MoveRotation(Quaternion.Euler(0f, yaw, 0f) * rb.rotation);
         }
     }
 }
