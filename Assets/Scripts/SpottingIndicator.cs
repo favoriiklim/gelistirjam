@@ -22,9 +22,9 @@ public class SpottingIndicator : MonoBehaviour
     [SerializeField] private float pulseSpeed = 6f;
 
     [Header("Hata ayıklama")]
-    [Tooltip("Sayısal gösterge. Denge ayarı bitince kapatılır. " +
-             "Ölçemediğin şeyi ayarlayamazsın; jam'de bu göstergeyi geç eklemek pahalıya patlar.")]
-    [SerializeField] private bool showDebugReadout = true;
+    [Tooltip("Sayısal gösterge. Sadece Editor'de ve development build'de çalışır; " +
+             "yayın build'inde tik açık kalsa bile ekrana hiçbir şey çizilmez.")]
+    [SerializeField] private bool showDebugReadout;
 
     private Image overlay;
     private GUIStyle debugStyle;
@@ -73,6 +73,11 @@ public class SpottingIndicator : MonoBehaviour
     /// </summary>
     private void OnGUI()
     {
+        // Yayın build'ine sızmasın diye derleme seviyesinde kapatılıyor:
+        // Inspector'daki tiki kapatmayı unutmak jam'de sık yapılan bir hata.
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        return;
+#else
         if (!showDebugReadout)
             return;
 
@@ -122,5 +127,6 @@ public class SpottingIndicator : MonoBehaviour
                 $"(okuduğu şüphe {turret.SpotterSuspicion:F2} / eşik {turret.EngageSuspicion:F2})",
                 debugStyle);
         }
+#endif
     }
 }
