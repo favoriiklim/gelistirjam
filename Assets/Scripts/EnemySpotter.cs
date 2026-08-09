@@ -49,9 +49,14 @@ public class EnemySpotter : MonoBehaviour
     [SerializeField] private float stillRangeFactor = 0.45f;
 
     [Header("Keşif")]
-    [Tooltip("Oyuncunun bu aracı vizörden görüp haritaya kaydedebileceği azami mesafe. " +
-             "Görüş hattı da açık olmalı; tepenin ardındaki düşman keşfedilmez.")]
-    [SerializeField] private float discoveryRange = 70f;
+    [Tooltip("Oyuncunun bu aracı görüp haritaya kaydedebileceği azami mesafe. " +
+             "Görüş hattı da açık olmalı; tepenin ardındaki düşman keşfedilmez.\n\n" +
+             "Bu değer ile View Distance arasındaki fark, oyuncunun bilgi avantajıdır: " +
+             "düşmanı ne kadar önce görürse rotasını o kadar rahat kurar. " +
+             "Fark daralırsa harita planlama aracı olmaktan çıkar.\n\n" +
+             "Üst sınır sis mesafesidir: göremeyeceğin bir düşmanı haritaya " +
+             "işaretlemek oyuncuya sebepsiz bilgi vermek olur.")]
+    [SerializeField] private float discoveryRange = 100f;
 
     /// <summary>0-1 arası şüphe seviyesi. 1 olduğunda oyuncu fark edilmiştir.</summary>
     public float Suspicion { get; private set; }
