@@ -57,6 +57,20 @@ public class EnemyGun : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float fireVolume = 0.7f;
 
+    [Tooltip("Atış klibinin ne kadarı çalınsın. 1 = tamamı. " +
+             "Uzun kayıtlarda kuyruğu kesmek için düşür.")]
+    [Range(0.05f, 1f)]
+    [SerializeField] private float firePlayPortion = 1f;
+
+    [Tooltip("Düşme klibinin ne kadarı çalınsın.")]
+    [Range(0.05f, 1f)]
+    [SerializeField] private float impactPlayPortion = 1f;
+
+    [Tooltip("Kesme anındaki yumuşatma süresi. Sıfır bırakılırsa ses " +
+             "aniden kesilir ve 'tık' duyulur.")]
+    [Range(0f, 0.5f)]
+    [SerializeField] private float cutFadeTime = 0.08f;
+
     [Tooltip("Işkalayan atışın kamerada yarattığı sarsıntı.")]
     [SerializeField] private float missShake = 0.8f;
 
@@ -72,7 +86,12 @@ public class EnemyGun : MonoBehaviour
     private EnemySpotter spotter;
     private EnemyTurret turret;
     private AudioSource fireSource;
+    private AudioSource impactSource;
     private VisorCamera visorCamera;
+
+    // Klip kesme sayaçları; süre dolunca kaynak kısılıp durdurulur.
+    private float fireCutTimer;
+    private float impactCutTimer;
 
     private float reloadTimer;
     private int shotsFired;
@@ -87,13 +106,69 @@ public class EnemyGun : MonoBehaviour
         spotter = GetComponent<EnemySpotter>();
         turret = GetComponent<EnemyTurret>();
 
-        fireSource = Muzzle.gameObject.AddComponent<AudioSource>();
-        fireSource.playOnAwake = false;
-        fireSource.loop = false;
         // Atış sesi konuma bağlı olmalı: hangi yönden geldiği bilgi taşır.
-        fireSource.spatialBlend = 1f;
-        fireSource.rolloffMode = AudioRolloffMode.Linear;
-        fireSource.maxDistance = 200f;
+        fireSource = CreateSource(Muzzle, "FireSource");
+
+        // Düşme sesi mermi nereye düştüyse oradan gelmeli, o yüzden ayrı bir
+        // obje: her atışta düşme noktasına taşınıyor.
+        var impactObject = new GameObject("ImpactSource");
+        impactObject.transform.SetParent(transform, false);
+        impactSource = CreateSource(impactObject.transform, null);
+    }
+
+    private static AudioSource CreateSource(Transform host, string childName)
+    {
+        GameObject target = host.gameObject;
+
+        if (!string.IsNullOrEmpty(childName))
+        {
+            var child = new GameObject(childName);
+            child.transform.SetParent(host, false);
+            target = child;
+        }
+
+        var source = target.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        source.loop = false;
+        source.spatialBlend = 1f;
+        source.rolloffMode = AudioRolloffMode.Linear;
+        source.maxDistance = 200f;
+
+        return source;
+    }
+
+    /// <summary>
+    /// Klibi baştan başlatır ve verilen oran kadarını çalar.
+    /// PlayOneShot durdurulamadığı için yönetilen kaynak kullanılıyor.
+    /// </summary>
+    private float PlayPortion(AudioSource source, AudioClip clip, float portion)
+    {
+        source.clip = clip;
+        source.volume = fireVolume;
+        source.time = 0f;
+        source.Play();
+
+        return clip.length * portion;
+    }
+
+    /// <summary>Sayaç dolarken sesi kısıp keser; ani kesme 'tık' duyurur.</summary>
+    private void UpdateCut(AudioSource source, ref float timer)
+    {
+        if (timer <= 0f)
+            return;
+
+        timer -= Time.deltaTime;
+
+        if (timer > 0f)
+        {
+            if (cutFadeTime > 0f)
+                source.volume = fireVolume * Mathf.Clamp01(timer / cutFadeTime);
+
+            return;
+        }
+
+        source.Stop();
+        source.volume = fireVolume;
     }
 
     private void OnEnable()
@@ -110,6 +185,9 @@ public class EnemyGun : MonoBehaviour
     {
         if (reloadTimer > 0f)
             reloadTimer -= Time.deltaTime;
+
+        UpdateCut(fireSource, ref fireCutTimer);
+        UpdateCut(impactSource, ref impactCutTimer);
 
         if (!shotPending)
             return;
@@ -161,7 +239,7 @@ public class EnemyGun : MonoBehaviour
         shotsFired++;
 
         if (fireClip != null)
-            fireSource.PlayOneShot(fireClip, fireVolume);
+            fireCutTimer = PlayPortion(fireSource, fireClip, firePlayPortion);
 
         bool hit = ResolveHit(player);
 
@@ -206,7 +284,10 @@ public class EnemyGun : MonoBehaviour
         spotter.ResetAfterShot(suspicionAfterMiss);
 
         if (missImpactClip != null)
-            AudioSource.PlayClipAtPoint(missImpactClip, impactPoint, fireVolume);
+        {
+            impactSource.transform.position = impactPoint;
+            impactCutTimer = PlayPortion(impactSource, missImpactClip, impactPlayPortion);
+        }
 
         PlayerTarget player = PlayerTarget.Instance;
         if (visorCamera == null && player != null)

@@ -5398,9 +5398,9 @@ MonoBehaviour:
   reloadTime: 4
   suspicionAfterMiss: 0.55
   cancelShotSuspicion: 0.3
-  fireClip: {fileID: 0}
+  fireClip: {fileID: 8300000, guid: aa5582f695bbf414daed70d219d63028, type: 3}
   missImpactClip: {fileID: 0}
-  fireVolume: 0.7
+  fireVolume: 1
   missShake: 0.8
 --- !u!114 &1671282248821682874
 MonoBehaviour:
